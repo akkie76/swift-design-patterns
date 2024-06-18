@@ -22,14 +22,14 @@
 * オブジェクトの各 property を参照時に予期せぬ nil 参照を回避できる
 * nil を考慮した例外処理の設計が不要になる
 
-　Swift のオブジェクトの各 property は init で初期化する必要があるので let propertyであれば値が保証されますが、アクセス修飾子は振る舞いに合ったものを指定しましょう。
+　Swift ではオブジェクトの各 property は init() で値が保証されるため、完全コンストラクタを容易に実現できるという特徴があります。
 
 
 ```
 struct User {
   let name: String
-  private let createdAt: Date // User内のみ参照される
-  private (set) var updatedAt: Date // User内で変更される
+  let createdAt: Date
+  let updatedAt: Date
   
   init(name: String, createdAt: Date, updatedAt: Date) {
     self.name = name
@@ -46,7 +46,7 @@ struct User {
 ```
 actor User {
   var name: String // User外から変更される
-  private let createdAt: Date
+  let createdAt: Date
   
   init(name: String, createdAt: Date) {
     self.name = name
@@ -56,15 +56,15 @@ actor User {
 ```
 
 
-　一方、framework の仕様により外部から property を代入する必要がある場面もあります。以下のコードは UIKIt による画面遷移時の実装例ですが、遷移先の userDetail にサーバからのレスポンスを代入しています。
+　次に、以下のコードは prepare() による画面遷移時の実装例ですが、遷移時に userDetail を代入しています。このケースでは ProfileViewController の userDetail は var を指定する必要があるため、意図しない再代入のリスクが生じます。
 
 
 ```
-final class UserProfileViewController: UIViewController {
+final class UserViewController: UIViewController {
   // 省略
   override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
     if segue.identifier == "identifier" {
-      let vc = segue.destination as! ProfileDetailViewController
+      let vc = segue.destination as! ProfileViewController
       vc.userDetail = response.userDetail
     }
   }
@@ -72,33 +72,33 @@ final class UserProfileViewController: UIViewController {
 ```
 
 
-　このようなケースでは、遷移先の ViewController の初期化時に userDetail を初期化することが難しいため 、遷移時に userDetail を代入しています。しかし、userDetail のアクセス修飾子を private に変更し、遷移先で利用する値の代入を関数によって一括で行うことで、意図せず値が再代入されるリスクが減り、コードの堅牢性を向上させることが可能です。
+　このようなケースでは、UIStoryboard > instantiateInitialViewController を使用することで、ProfileViewController の初期化時に userDetail を代入することができるため let 指定にすることができます。これによって意図せず値が再代入されるリスクが減り、コードの堅牢性を向上させることが可能です。
 
 
 ```
-final class ProfileDetailViewController: UIViewController {
-  // ProfileDetailViewControllerで使用するパラメータ群
-  var userDetail: UserDetail!
-  
-  func configureUserDetail(userDetail: UserDetail) {
-    self.userDetail = userDetail
-  }
-}
-
-final class UserProfileViewController: UIViewController {
-  var response: Response!
+final class ProfileViewController: UIViewController {
+  private let userDetail: UserDetail
   // 省略
-  override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-    if segue.identifier == "identifier" {
-      let vc = segue.destination as! ProfileDetailViewController
-      vc.configureUserDetail(userDetail: response.userDetail)
+  init?(coder: NSCoder, userDetail: UserDetail) {
+    self.userDetail = userDetail
+    super.init(coder: coder)
+  }
+}
+
+final class UserViewController: UIViewController {
+  // 省略
+  func showProfileViewController() {
+    let storyboard = UIStoryboard(name: "Profile", bundle: nil)
+    let vc = storyboard.instantiateInitialViewController { coder in
+      ProfileViewController(coder: coder, userDetail: self.response.userDetail)
     }
+    navigationController?.pushViewController(vc!, animated: true)
   }
 }
 ```
 
 
-　このように、完全コンストラクタで初期化時に各 proprety の値を確定する、もしくは  property の変更容易性を制限することで意図しない値の再代入を防ぐことができ、コードの堅牢性を向上させることができます。
+　このように、完全コンストラクタで初期化時に proprety の値を確定することで意図しない値の再代入を防ぐことができ、コードの堅牢性を向上させることができます。
 
 
 ## 2. 値オブジェクト（Value Object）
@@ -168,7 +168,7 @@ struct MobilePhoneNumber {
 
 
 ```
-class UserRepository {
+struct UserRepository {
   let requestType: RequestType
   
   init(requestType: RequestType) {
@@ -181,7 +181,7 @@ class UserRepository {
       return "/user/v1/profile"
     case .activity:
       return "/user/v2/activity"
-    // 以降、RequestTypeのcaseが続く・・・
+      // 以降、RequestTypeのcaseが続く・・・
     }
   }
   
@@ -191,11 +191,11 @@ class UserRepository {
       return [["key1": value1], ["key2": value2]]
     case .activity:
       return [["key3": value1], ["key4": value2]]
-    // 以降、RequestTypeのcaseが続く・・・
+      // 以降、RequestTypeのcaseが続く・・・
     }
   }
   
-  func fetchData(value1: String, value2: String, completion: @escaping (Result<Data, Error>) -> Void) {
+  func fetchData(value1: String, value2: String) async throws -> Data {
     let parameter = getParameter(value1: value1, value2: value2)
     // リクエスト処理
   }
@@ -210,7 +210,7 @@ class UserRepository {
 protocol UserRepositoryProtocol {
   var path: String { get }
   func getParameter(value1: Any, value2: Any) -> [[String: Any]]
-  func fetchData(value1: String, value2: String, completion: @escaping (Result<Data, Error>) -> Void)
+  func fetchData(value1: String, value2: String) async throws -> Data
 }
 ```
 
@@ -219,7 +219,7 @@ protocol UserRepositoryProtocol {
 
 
 ```
-final class UserProfileRepository: UserRepositoryProtocol {
+struct UserProfileRepository: UserRepositoryProtocol {
   var path: String {
     return "/user/v1/profile"
   }
@@ -228,7 +228,7 @@ final class UserProfileRepository: UserRepositoryProtocol {
     return [["key1": value1], ["key2": value2]]
   }
   
-  func fetchData(value1: String, value2: String, completion: @escaping (Result<Data, Error>) -> Void) {
+  func fetchData(value1: String, value2: String) async throws -> Data {
     let parameter = getParameter(value1: value1, value2: value2)
     // リクエスト処理
   }
@@ -238,7 +238,7 @@ final class UserProfileRepository: UserRepositoryProtocol {
 
 
 ```
-final class UserActivityRepository: UserRepositoryProtocol {
+struct UserActivityRepository: UserRepositoryProtocol {
   var path: String {
     return "/user/v2/activity"
   }
@@ -247,7 +247,7 @@ final class UserActivityRepository: UserRepositoryProtocol {
     return [["key3": value1], ["key4": value2]]
   }
   
-  func fetchData(value1: String, value2: String, completion: @escaping (Result<Data, Error>) -> Void) {
+  func fetchData(value1: String, value2: String) async throws -> Data {
     let parameter = getParameter(value1: value1, value2: value2)
     // リクエスト処理
   }
@@ -341,7 +341,6 @@ class Payment {
   
   // サブスクリプション関連のメソッドを追加
   func processSubscription() {
-    // サブスクリプションに関連する処理
     if let subscriptionType = subscriptionType, let startedAt = startedAt {
       if !enableSubscription(subscriptionType: subscriptionType, startedAt: startedAt) {
         fatalError("not available subscription.")
@@ -363,15 +362,21 @@ class Payment {
 
 
 ```
-class Payment {
-  private let identifier: String
+protocol PaymentProtocol {
+  var identifier: String { get }
+}
+
+extension PaymentProtocol {
+  func processPayment() {
+    // 購入処理
+  }
+}
+
+class Payment: PaymentProtocol {
+  var identifier: String
   
   init(identifier: String) {
     self.identifier = identifier
-  }
-  
-  func processPayment() {
-    // 購入処理
   }
 }
 ```
@@ -379,14 +384,15 @@ class Payment {
 
 
 ```
-class SubscriptionPayment: Payment {
-  private let subscriptionType: SubscriptionType
-  private let startedAt: Date
+class SubscriptionPayment: PaymentProtocol {
+  var identifier: String
+  let subscriptionType: SubscriptionType
+  let startedAt: Date
   
-  init(subscriptionType: SubscriptionType, startedAt: Date, identifier: String) {
+  init(identifier: String, subscriptionType: SubscriptionType, startedAt: Date) {
+    self.identifier = identifier
     self.subscriptionType = subscriptionType
     self.startedAt = startedAt
-    super.init(identifier: identifier)
   }
   
   func processSubscription() {
@@ -405,7 +411,7 @@ class SubscriptionPayment: Payment {
 ```
 
 
-　Payment クラスからサブスクリプションの処理を削除して通常購入処理だけにします。そして、SubscriptionPayment クラスに Payment クラスを継承させて、Subscription に関連するロジックを追加して責務を分離することで、Payment クラスの肥大化を回避して SubscriptionPayment クラスのテスト用意性を向上させることができます。さらに共通の関数で異なるロジックを実装するような場合は、protocol を作成して共通のインターフェースとして利用することで、ロジックの独立性を高めることも可能です。
+　Payment クラスと SubscriptionPayment クラスの共通の処理である processPayment() をそれぞれのクラスで利用できるように protocol を定義し、 extension 側に関数を移動しました。そして、SubscriptionPayment クラスに Subscription に関連するロジックを追加して責務を分離することで、Payment クラスへの影響と肥大化を回避し SubscriptionPayment クラスのロジックの独立性とテスト用意性を向上させることができました。
 
 　このように、スプラウトクラスを利用することで、既存クラスに直接の変更を加えることなく安全に新しい機能を追加でき、同時にロジックの独立性とテスト容易性を向上させることができます。
 
@@ -417,9 +423,7 @@ class SubscriptionPayment: Payment {
 
 ### 感想・フィードバック
 
-　本記事の感想やフィードバックを X アカウント：@akkiee76 にてお待ちしております。お気軽にどんどん送ってください。ここが良かった、ここが分かりにくかったなど今後の執筆の参考にできればと思います。
-
-　また、本記事で扱ったサンプルコードは以下の GitHub リポジトリにて公開しております。改善点や疑問などありましたら、Pull Request や Issue の作成もお待ちしております。
+　本記事の感想やフィードバックを X アカウント：@akkiee76 にてお待ちしております。お気軽にどんどん送ってください。ここが良かった、ここが分かりにくかったなど今後の執筆の参考にできればと思います。また、本記事で扱ったサンプルコードは以下の GitHub リポジトリにて公開しております。改善点や疑問などありましたら、Pull Request や Issue の作成もお待ちしております。
 
 
 
