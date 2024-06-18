@@ -22,7 +22,7 @@
 * オブジェクトの各 property を参照時に予期せぬ nil 参照を回避できる
 * nil を考慮した例外処理の設計が不要になる
 
-　Swift ではオブジェクトの各 property は init() で値が保証されるため、完全コンストラクタを容易に実現できるという特徴があります。
+　Swift ではオブジェクトの各 property は init() で値を初期化できるため、完全コンストラクタを容易に実現できるという特徴があります。
 
 
 ```
@@ -112,44 +112,53 @@ final class UserViewController: UIViewController {
 * 値の等価性を判定できる
 * 副作用のない振る舞いを提供する
 
-　アプリ開発では、価格、時間、電話番号、日付など様々な値を扱う場面において、これらの操作をオブジェクトに集約することでより堅牢な設計にすることができます。
+　アプリ開発では、氏名、郵便番号、金額、税率など様々な値を扱う場面において、これらの操作をオブジェクトに集約することでより堅牢な設計にすることができます。
 
-　では、以下のコードを見てみましょう。mobilePhoneNumber は 11 桁の数値文字列が前提となります。
+　では、以下のコードを見てみましょう。
 
 
 ```
-struct UserDetailView: View {
-  let userDetail: UserDetail!
-  
-  var body: some View {
-    // 携帯電話番号をハイフン区切りで表示
-    Text(formatHyphen(userDetail.mobilePhoneNumber))
+struct User {
+  let firstName: String
+  let lastName: String
+
+  var fullName: String {
+    return "\(firstName) \(lastName)"
   }
   
-  func formatHyphen(_ mobilePhoneNumber: String) -> String {
-    return mobilePhoneNumber.prefix(3) + "-" +
-    mobilePhoneNumber.dropFirst(3).prefix(4) + "-" +
-    mobilePhoneNumber.dropFirst(7)
+  func compareName(user: User) -> Bool {
+    return firstName == user.firstName && lastName == user.lastName
   }
 }
 ```
 
 
-　mobilePhoneNumber は UserDetail に定義されていますが、ハイフン繋ぎにする関数は View 側に実装されています。複数の画面でハイフン繋ぎで表示するようなった場合、複数のハイフン繋ぎロジックが誕生し低凝集に陥ることも考えられます。そこで、これを値オブジェクトに変更することで値の不変性を維持しつつ、ハイフン繋ぎの property を定義することで高凝集にすることができます。
+　User はユーザに関する情報を持つ struct ですが、fullName や compare() の名前に関するロジックが実装されており、やや責務超過の印象があります。そこで、この名前を値オブジェクトにすると以下のコードになります。名前固有の fullName や Equatable で等価性が判定できるようになり、User から Name に関するロジックを移行することで凝集性を高めることができます。
 
 
 ```
-struct MobilePhoneNumber {
-  let value: String
+struct Name: Equatable, Hashable {
+  let firstName: String
+  let lastName: String
   
-  init(value: String) {
-    self.value = value
+  var fullName: String {
+    return "\(firstName) \(lastName)"
   }
-  
-  var hyphenNumber: String {
-    value.prefix(3) + "-" +
-    value.dropFirst(3).prefix(4) + "-" +
-    value.dropFirst(7)
+
+  init(firstName: String, lastName: String) {
+    self.firstName = firstName
+    self.lastName = lastName
+  }
+}
+
+struct User {
+  let name: Name
+  // 省略
+}
+
+extension User {
+  func compareName(user: User) -> Bool {
+    return self.name == user.name
   }
 }
 ```
@@ -203,7 +212,7 @@ struct UserRepository {
 ```
 
 
-　UserRepository は requestType に応じてユーザに関連する情報をAPIで取得するためのクラスです。getPath() と getParameter() の中ではそれぞれ switch 文で条件分岐が実装されて冗長になっています。今後さらに case が増えると UserRepository クラスのコードが肥大化していくことが考えられます。そこで、ストラテジーパターンで再設計してみましょう。
+　UserRepository は requestType に応じてユーザに関連する情報をAPIで取得するための機能です。getPath() と getParameter() の中ではそれぞれ switch 文で条件分岐が実装されて冗長になっています。今後さらに case が増えると UserRepository のコードが肥大化していくことが考えられます。そこで、ストラテジーパターンで再設計してみましょう。
 
 
 ```
@@ -313,7 +322,9 @@ struct ItemCollection {
 ```
 
 
-　ItemCollection を作成し、要素数バリデーション、重複チェック、要素の追加を関数化しそれぞれの責務を分離しました。要素を追加する際は直接 items が変更されないため、副作用を避けることができます。このように、ファーストクラスコレクションで設計することによって、コレクションをより安全に扱うことができるようになりました。
+　ItemCollection を作成し、要素数バリデーション、重複チェック、要素の追加を関数化しそれぞれの責務を分離しました。要素を追加する際は直接 items が変更されないため、副作用を避けることができます。 
+
+　このように、ファーストクラスコレクションで設計することによって、コレクションをより安全に扱うことができます。
 
 
 ## 5. スプラウトクラス（Sprout Class）
@@ -324,7 +335,7 @@ struct ItemCollection {
 
 
 ```
-class Payment {
+struct Payment {
   private let identifier: String
   
   init(identifier: String) {
@@ -358,7 +369,7 @@ class Payment {
 ```
 
 
-　既存の Payment クラスにサブスクリプションの処理が追加されて、クラス自体の責務が増えています。Payment クラスに実装されている通常購入処理  processPayment() とサブスクリプション購入処理 processSubscription() を定義することで関連ロジックも増え、コードの複雑性も上がります。そこで、このサブスクリプションの機能をスプラウトクラスを利用して Payment クラスからその責務を分離してみましょう。
+　既存の Payment にサブスクリプションの処理が追加されて、自身の責務が増えています。Payment に実装されている通常購入処理  processPayment() とサブスクリプション購入処理 processSubscription() を定義することで関連ロジックも増え、コードの複雑性も上がります。そこで、このサブスクリプションの機能をスプラウトクラスを利用して Payment からその責務を分離してみましょう。
 
 
 ```
@@ -372,7 +383,7 @@ extension PaymentProtocol {
   }
 }
 
-class Payment: PaymentProtocol {
+struct Payment: PaymentProtocol {
   var identifier: String
   
   init(identifier: String) {
@@ -384,7 +395,7 @@ class Payment: PaymentProtocol {
 
 
 ```
-class SubscriptionPayment: PaymentProtocol {
+struct SubscriptionPayment: PaymentProtocol {
   var identifier: String
   let subscriptionType: SubscriptionType
   let startedAt: Date
@@ -411,9 +422,9 @@ class SubscriptionPayment: PaymentProtocol {
 ```
 
 
-　Payment クラスと SubscriptionPayment クラスの共通の処理である processPayment() をそれぞれのクラスで利用できるように protocol を定義し、 extension 側に関数を移動しました。そして、SubscriptionPayment クラスに Subscription に関連するロジックを追加して責務を分離することで、Payment クラスへの影響と肥大化を回避し SubscriptionPayment クラスのロジックの独立性とテスト用意性を向上させることができました。
+　Payment と SubscriptionPayment の共通の処理である processPayment() をそれぞれ共通で利用できるように protocol を定義し、 extension 側に関数を移動しました。そして、SubscriptionPayment に Subscription に関連するロジックを追加して責務を分離することで、Payment への影響と肥大化を回避し SubscriptionPayment のロジックの独立性とテスト用意性を向上させることができました。
 
-　このように、スプラウトクラスを利用することで、既存クラスに直接の変更を加えることなく安全に新しい機能を追加でき、同時にロジックの独立性とテスト容易性を向上させることができます。
+　このように、スプラウトクラスを利用することで、既存実装に直接の変更を加えることなく安全に新しい機能を追加でき、同時にロジックの独立性とテスト容易性を向上させることができます。
 
 
 ## さいごに
