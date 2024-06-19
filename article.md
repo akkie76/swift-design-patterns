@@ -133,11 +133,11 @@ struct User {
 ```
 
 
-　User はユーザに関する情報を持つ struct ですが、fullName や compare() の名前に関するロジックが実装されており、やや責務超過の印象があります。そこで、この名前を値オブジェクトにすると以下のコードになります。名前固有の fullName や Equatable で等価性が判定できるようになり、User から Name に関するロジックを移行することで凝集性を高めることができます。
+　User はユーザに関する情報を持つ struct ですが、fullName や compare() の名前に関するロジックが実装されており、User の関心ごとがやや多くなっている印象です。そこで、この名前を値オブジェクトに変更してみましょう。名前固有の fullName や Equatable で等価性が判定できるようになり、User から Name に関するロジックを移行することで凝集性を高めることができます。
 
 
 ```
-struct Name: Equatable, Hashable {
+struct Name: Equatable {
   let firstName: String
   let lastName: String
   
