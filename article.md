@@ -375,6 +375,7 @@ struct Payment {
 ```
 protocol PaymentProtocol {
   var identifier: String { get }
+  func processPayment()
 }
 
 extension PaymentProtocol {
@@ -422,7 +423,7 @@ struct SubscriptionPayment: PaymentProtocol {
 ```
 
 
-　Payment と SubscriptionPayment の共通の処理である processPayment() をそれぞれ共通で利用できるように protocol を定義し、 extension 側に関数を移動しました。そして、SubscriptionPayment に Subscription に関連するロジックを追加して責務を分離することで、Payment への影響と肥大化を回避し SubscriptionPayment のロジックの独立性とテスト用意性を向上させることができました。
+　Payment と SubscriptionPayment の共通の処理である processPayment() をそれぞれ共通で利用できるように protocol を定義し extension 側に関数を移行しました。そして、SubscriptionPayment に Subscription に関連するロジックを追加して責務を分離することで、Payment への影響と肥大化を回避し SubscriptionPayment のロジックの独立性とテスト用意性を向上させることができました。
 
 　このように、スプラウトクラスを利用することで、既存実装に直接の変更を加えることなく安全に新しい機能を追加でき、同時にロジックの独立性とテスト容易性を向上させることができます。
 
