@@ -64,7 +64,7 @@ final class UserViewController: UIViewController {
   // 省略
   override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
     if segue.identifier == "identifier" {
-      let vc = segue.destination as! ProfileViewController
+      guard let vc = segue.destination as? ProfileViewController else { return }
       vc.userDetail = response.userDetail
     }
   }
