@@ -22,7 +22,7 @@
 * オブジェクトの各 property を参照時に予期しない nil 参照を回避できる
 * nil を考慮した例外処理の設計が不要になる
 
-　Swift の class や struct では init() の自動生成により各 property の値が初期化されるため、完全コンストラクタを容易に実現できるという特徴があります。
+　Swift における class や struct では init() の自動生成により各 property の値が初期化されるため、完全コンストラクタを容易に実現できるという特徴があります。
 
 
 ```
@@ -133,7 +133,7 @@ struct User {
 ```
 
 
-　User はユーザに関する情報を持つ struct ですが、fullName や compare() の名前に関するロジックが実装されており、User の関心ごとがやや多くなっている印象です。そこで、この名前を値オブジェクトに変更してみましょう。名前固有の fullName や Equatable で等価性が判定できるようになり、User から Name に関するロジックを移行することで凝集性を高めることができます。
+　User はユーザに関する情報を持つ struct ですが、fullName や compare() の名前に関するロジックが実装されており、User の関心ごとがやや多くなっている印象です。そこで、この名前を値オブジェクトに変更してみましょう。名前固有の fullName の取得や Equatable で等価性が判定できるようになり、User から Name に関するロジックを移行することで凝集性を高めることができます。
 
 
 ```
@@ -212,7 +212,7 @@ struct UserRepository {
 ```
 
 
-　UserRepository は requestType に応じてユーザに関連する情報をAPIで取得するための機能です。getPath() と getParameter() の中ではそれぞれ switch 文で条件分岐が実装されて冗長になっています。今後さらに case が増えると UserRepository のコードが肥大化していきます。そこで、ストラテジーパターンで再設計してみましょう。
+　UserRepository は requestType に応じてユーザに関連する情報を AP Iで取得するための機能です。getPath() と getParameter() の中ではそれぞれ switch 文で条件分岐が実装されて冗長になっています。今後さらに case が増えると UserRepository のコードが肥大化していきます。そこで、ストラテジーパターンで再設計してみましょう。
 
 
 ```
