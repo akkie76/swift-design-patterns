@@ -292,7 +292,7 @@ func addItem(_ item: Item) {
 
 ```
 struct ItemCollection {
-  private var items: [Item] = []
+  private let items: [Item]
   private let maxCount = 10
   
   init(items: [Item]) {
