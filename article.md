@@ -25,7 +25,7 @@
 　Swift における class や struct では init() の自動生成により各 property の値が初期化されるため、完全コンストラクタを容易に実現できるという特徴があります。
 
 
-```
+```Swift
 struct User {
   let name: String
   let createdAt: Date
@@ -43,7 +43,7 @@ struct User {
 　また、外部から変更が想定される property を含む場合は、actor を使用して一つの property にアクセスが同時に行われないようにしましょう。actor を指定していれば、データ競合が生じる場合にコンパイラ側で検知することが可能です。
 
 
-```
+```Swift
 actor User {
   var name: String // User外から変更される
   let createdAt: Date
@@ -59,7 +59,7 @@ actor User {
 　次に、以下のコードは prepare() による画面遷移時の実装例ですが、遷移時に userDetail を代入しています。このケースでは ProfileViewController の userDetail は var を指定する必要があるため、意図しない再代入のリスクが生じます。
 
 
-```
+```Swift
 final class UserViewController: UIViewController {
   // 省略
   override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
@@ -76,7 +76,7 @@ final class UserViewController: UIViewController {
 　このようなケースでは、UIStoryboard > instantiateInitialViewController を使用することで、ProfileViewController の初期化時に userDetail を代入することができるため let 指定にすることができます。これによって意図せず値が再代入されるリスクがなくなり、コードの堅牢性を向上させることが可能です。
 
 
-```
+```Swift
 final class ProfileViewController: UIViewController {
   private let userDetail: UserDetail
   // 省略
@@ -118,7 +118,7 @@ final class UserViewController: UIViewController {
 　では、以下のコードを見てみましょう。
 
 
-```
+```Swift
 struct User {
   let firstName: String
   let lastName: String
@@ -137,7 +137,7 @@ struct User {
 　User はユーザに関する情報を持つ struct ですが、fullName や compare() の名前に関するロジックが実装されており、User の関心ごとがやや多くなっている印象です。そこで、この名前を値オブジェクトに変更してみましょう。名前固有の fullName の取得や Equatable で等価性が判定できるようになり、User から Name に関するロジックを移行することで凝集性を高めることができます。
 
 
-```
+```Swift
 struct Name: Equatable {
   let firstName: String
   let lastName: String
@@ -177,7 +177,7 @@ extension User {
 　では、以下のコードを見てみましょう。
 
 
-```
+```Swift
 struct UserRepository {
   let requestType: RequestType
   
@@ -216,7 +216,7 @@ struct UserRepository {
 　UserRepository は requestType に応じてユーザに関連する情報を AP Iで取得するための機能です。getPath() と getParameter() の中ではそれぞれ switch 文で条件分岐が実装されて冗長になっています。今後さらに case が増えると UserRepository のコードが肥大化していきます。そこで、ストラテジーパターンで再設計してみましょう。
 
 
-```
+```Swift
 protocol UserRepositoryProtocol {
   var path: String { get }
   func getParameter(value1: Any, value2: Any) -> [[String: Any]]
@@ -228,7 +228,7 @@ protocol UserRepositoryProtocol {
 　まず Protocol を定義し、UserRepository から各 RequestType 別に責務分割をします。
 
 
-```
+```Swift
 struct UserProfileRepository: UserRepositoryProtocol {
   var path: String {
     return "/user/v1/profile"
@@ -247,7 +247,7 @@ struct UserProfileRepository: UserRepositoryProtocol {
 
 
 
-```
+```Swift
 struct UserActivityRepository: UserRepositoryProtocol {
   var path: String {
     return "/user/v2/activity"
@@ -275,7 +275,7 @@ struct UserActivityRepository: UserRepositoryProtocol {
 　では、以下のコードを見てみましょう。
 
 
-```
+```Swift
 func addItem(_ item: Item) {
   if items.count == 10 {
     fatalError("already max count.")
@@ -291,7 +291,7 @@ func addItem(_ item: Item) {
 　この addItem 関数は自身の items に要素を追加する関数ですが、要素数バリデーション、重複チェック、要素の追加の責務が同じ関数に含まれています。また、直接 items に要素が追加されているため、副作用が生じる可能性があります。そこで、ファーストクラスコレクションでそれぞれの責務を分離し、副作用が生じないオブジェクトに変更してみましょう。
 
 
-```
+```Swift
 struct ItemCollection {
   private let items: [Item]
   private let maxCount = 10
@@ -335,7 +335,7 @@ struct ItemCollection {
 　では、以下のコードを見てみましょう。既存の通常課金を責務とする Payment にサブスクリプション機能が追加されたコードです。
 
 
-```
+```Swift
 struct Payment {
   private let identifier: String
   
@@ -373,7 +373,7 @@ struct Payment {
 　既存の Payment にサブスクリプションの処理が追加されて、自身の責務が増えています。Payment に実装されている通常購入処理  processPayment() とサブスクリプション購入処理 processSubscription() を定義することで関連ロジックも増え、コードの複雑性も上がります。そこで、このサブスクリプションの機能をスプラウトクラスを利用して Payment からその責務を分離してみましょう。
 
 
-```
+```Swift
 protocol PaymentProtocol {
   var identifier: String { get }
   func processPayment()
@@ -396,7 +396,7 @@ struct Payment: PaymentProtocol {
 
 
 
-```
+```Swift
 struct SubscriptionPayment: PaymentProtocol {
   var identifier: String
   let subscriptionType: SubscriptionType
