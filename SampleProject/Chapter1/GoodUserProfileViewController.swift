@@ -1,6 +1,6 @@
 import UIKit
 
-final class GoogUserProfileViewController: UIViewController {
+final class GoodUserProfileViewController: UIViewController {
   private var response: Response!
   
   func showProfileViewController() {

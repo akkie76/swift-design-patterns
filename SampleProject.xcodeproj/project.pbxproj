@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		54B9B3182C67B3D5001C5040 /* GoogUserProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54B9B3172C67B3D5001C5040 /* GoogUserProfileViewController.swift */; };
+		54B9B3182C67B3D5001C5040 /* GoodUserProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54B9B3172C67B3D5001C5040 /* GoodUserProfileViewController.swift */; };
 		54B9B31A2C67B69A001C5040 /* Profile.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 54B9B3192C67B69A001C5040 /* Profile.storyboard */; };
 		54B9B31C2C67BE4E001C5040 /* BadUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54B9B31B2C67BE4E001C5040 /* BadUser.swift */; };
 		54B9B31D2C67BE4E001C5040 /* BadUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54B9B31B2C67BE4E001C5040 /* BadUser.swift */; };
@@ -54,7 +54,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		54B9B3172C67B3D5001C5040 /* GoogUserProfileViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogUserProfileViewController.swift; sourceTree = "<group>"; };
+		54B9B3172C67B3D5001C5040 /* GoodUserProfileViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoodUserProfileViewController.swift; sourceTree = "<group>"; };
 		54B9B3192C67B69A001C5040 /* Profile.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = Profile.storyboard; sourceTree = "<group>"; };
 		54B9B31B2C67BE4E001C5040 /* BadUser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BadUser.swift; sourceTree = "<group>"; };
 		54B9B3252C6886A0001C5040 /* ItemCollectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemCollectionTests.swift; sourceTree = "<group>"; };
@@ -209,7 +209,7 @@
 				54D84BE72C1D38FF004617B1 /* User.swift */,
 				54D84C062C1F25EB004617B1 /* UserDetail.swift */,
 				54D84C032C1F25B6004617B1 /* BadUserProfileViewController.swift */,
-				54B9B3172C67B3D5001C5040 /* GoogUserProfileViewController.swift */,
+				54B9B3172C67B3D5001C5040 /* GoodUserProfileViewController.swift */,
 				54B9B3192C67B69A001C5040 /* Profile.storyboard */,
 			);
 			path = Chapter1;
@@ -343,7 +343,7 @@
 				54D84BBE2C1D38E5004617B1 /* SampleProjectApp.swift in Sources */,
 				54D84C132C1F277A004617B1 /* BadPayment.swift in Sources */,
 				54B9B31C2C67BE4E001C5040 /* BadUser.swift in Sources */,
-				54B9B3182C67B3D5001C5040 /* GoogUserProfileViewController.swift in Sources */,
+				54B9B3182C67B3D5001C5040 /* GoodUserProfileViewController.swift in Sources */,
 				54D84BF52C1EE492004617B1 /* GoodUserRepository.swift in Sources */,
 				54D84C072C1F25EB004617B1 /* UserDetail.swift in Sources */,
 				54D84BE82C1D38FF004617B1 /* User.swift in Sources */,

@@ -18,8 +18,12 @@ struct GoodUserProfileRepository: UserRepositoryProtocol {
   func fetchData(value1: String, value2: String) async throws -> Data {
     let parameter = getParameter(value1: value1, value2: value2)
     // リクエスト処理
-    let response = try! Data(contentsOf: URL(string: "content-url-response")!)
-    return response
+    do {
+      let response = try Data(contentsOf: URL(string: "content-url-response")!)
+      return response
+    } catch {
+      throw error
+    }
   }
 }
 
@@ -35,7 +39,11 @@ struct GoodUserActivityRepository: UserRepositoryProtocol {
   func fetchData(value1: String, value2: String) async throws -> Data {
     let parameter = getParameter(value1: value1, value2: value2)
     // リクエスト処理
-    let response = try! Data(contentsOf: URL(string: "content-url-response")!)
-    return response
+    do {
+      let response = try Data(contentsOf: URL(string: "content-url-response")!)
+      return response
+    } catch {
+      throw error
+    }
   }
 }
