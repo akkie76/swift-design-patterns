@@ -64,8 +64,9 @@ final class UserViewController: UIViewController {
   // 省略
   override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
     if segue.identifier == "identifier" {
-      let vc = segue.destination as! ProfileViewController
-      vc.userDetail = response.userDetail
+      if let vc = segue.destination as? BadProfileViewController {
+        vc.userDetail = response.userDetail
+      }
     }
   }
 }
@@ -292,7 +293,7 @@ func addItem(_ item: Item) {
 
 ```
 struct ItemCollection {
-  private var items: [Item] = []
+  private let items: [Item]
   private let maxCount = 10
   
   init(items: [Item]) {
