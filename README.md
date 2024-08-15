@@ -10,7 +10,7 @@
 
 # Swift design patterns learning from Good Code and Bad Code
 
-This is a repository that introduces sample code for "Swift design patterns learning from Good Code and Bad Code" brochure article which was donated to the [iOSDC Japan 2024](https://iosdc.jp/2024/) .
+This is a repository that introduces sample code for "Swift design patterns learning from Good Code and Bad Code" brochure article, which was donated to the [iOSDC Japan 2024](https://iosdc.jp/2024/) .
 
 * [Article(en)](https://github.com/akkie76/swift-design-patterns/blob/main/article_en.md)
 * [Proposal](https://fortee.jp/iosdc-japan-2024/proposal/69b5f854-8a15-4e6a-b164-1eaf858a7491)
