@@ -15,4 +15,4 @@ This is a repository that introduces sample code for "Swift design patterns lear
 * [Article(en)](https://github.com/akkie76/swift-design-patterns/blob/main/article_en.md)
 * [Proposal](https://fortee.jp/iosdc-japan-2024/proposal/69b5f854-8a15-4e6a-b164-1eaf858a7491)
 
-I'm looking forward to feedbacks on this article at X Account: [@akkiee76](https://x.com/akkiee76). Please don't hesitate to share your thoughts. I want to use your comments as a reference for future writing, such as what you thought was good or what you found difficult to understand. Also, if having any improvements or questions, I welcome the creation of pull requests or issues.
+I'm looking forward to feedback on this article at my X account: [@akkiee76](https://x.com/akkiee76). Please don't hesitate to share your thoughts. I want to use your comments as a reference for future writing, such as what you thought was good or what you found difficult to understand. Also, if you have any improvements or questions, I welcome the creation of pull requests or issues.
