@@ -89,3 +89,222 @@ final class UserViewController: UIViewController {
 By setting the property values during initialization using a complete initializer like this, you can prevent unintended value reassignment, thereby enhancing the robustness of your code.
 
 ## 2. Value Object
+
+A value object is a design pattern that treats values as types and has the following characteristics:
+
+Responsible for measurement, quantification, and description
+Maintains immutability of state
+Can determine value equality
+Provides behavior without side effects
+In app development, when dealing with various values such as names, postal codes, amounts, and tax rates, aggregating these operations into objects can lead to a more robust design.
+
+Now, let's take a look at the following code:
+
+```Swift
+struct User {
+  let firstName: String
+  let lastName: String
+
+  var fullName: String {
+    return "\(firstName) \(lastName)"
+  }
+  
+  func compareName(user: User) -> Bool {
+    return firstName == user.firstName && lastName == user.lastName
+  }
+}
+```
+
+The User struct holds information about a user, but it also implements logic related to names, such as fullName and compareName(), which makes User seem somewhat overloaded with responsibilities. Let's change this name logic to a value object. By moving name-specific logic, such as retrieving fullName and determining equality with Equatable, from User to Name, we can increase cohesion.
+
+```Swift
+struct Name: Equatable {
+  let firstName: String
+  let lastName: String
+  
+  var fullName: String {
+    return "\(firstName) \(lastName)"
+  }
+
+  init(firstName: String, lastName: String) {
+    self.firstName = firstName
+    self.lastName = lastName
+  }
+}
+
+struct User {
+  let name: Name
+  // Omitted
+}
+
+extension User {
+  func compareName(user: User) -> Bool {
+    return self.name == user.name
+  }
+}
+```
+
+By making this change to a value object, you can achieve a highly cohesive design. Additionally, by combining this approach with the complete initializer mentioned earlier, you can aim for an even more robust design.
+
+##  3. Strategy Pattern
+
+The Strategy pattern is a design pattern that encapsulates algorithms externally when it is necessary to switch between them dynamically, allowing you to choose different algorithms based on the required case. By separating the part that executes the algorithm from the part that uses it, you can achieve a design that is easier to modify. This improves the independence of the logic and the ease of testing.
+
+On the other hand, the Policy pattern is a design pattern that, like the Strategy pattern, encapsulates algorithms or behaviors, but it specifically defines business rules or policies and provides an interface to apply these policies. This allows you to apply multiple policies to any module, making it a useful design pattern.
+
+Let's take a look at the following code:
+
+```Swift
+struct UserRepository {
+  let requestType: RequestType
+  
+  init(requestType: RequestType) {
+    self.requestType = requestType
+  }
+  
+  var path: String {
+    switch requestType {
+    case .profile:
+      return "/user/v1/profile"
+    case .activity:
+      return "/user/v2/activity"
+      // Additional cases for RequestType follow...
+    }
+  }
+  
+  func getParameter(value1: String, value2: String) -> [[String: String]] {
+    switch requestType {
+    case .profile:
+      return [["key1": value1], ["key2": value2]]
+    case .activity:
+      return [["key3": value1], ["key4": value2]]
+      // Additional cases for RequestType follow...
+    }
+  }
+  
+  func fetchData(value1: String, value2: String) async throws -> Data {
+    let parameter = getParameter(value1: value1, value2: value2)
+    // Request processing
+  }
+}
+```
+
+The UserRepository is responsible for fetching user-related information via an API, depending on the requestType. The getPath() and getParameter() methods use switch statements for conditional branching, which makes the code redundant. As more cases are added in the future, the code in UserRepository will become bloated. Let's redesign this using the Strategy pattern.
+
+```Swift
+protocol UserRepositoryProtocol {
+  var path: String { get }
+  func getParameter(value1: Any, value2: Any) -> [[String: Any]]
+  func fetchData(value1: String, value2: String) async throws -> Data
+}
+```
+
+First, define a protocol and divide the responsibilities in UserRepository according to each RequestType.
+
+```Swift
+struct UserProfileRepository: UserRepositoryProtocol {
+  var path: String {
+    return "/user/v1/profile"
+  }
+  
+  func getParameter(value1: Any, value2: Any) -> [[String: Any]] {
+    return [["key1": value1], ["key2": value2]]
+  }
+  
+  func fetchData(value1: String, value2: String) async throws -> Data {
+    let parameter = getParameter(value1: value1, value2: value2)
+    // Request processing
+  }
+}
+```
+
+```Swift
+struct UserProfileRepository: UserRepositoryProtocol {
+  var path: String {
+    return "/user/v1/profile"
+  }
+  
+  func getParameter(value1: Any, value2: Any) -> [[String: Any]] {
+    return [["key1": value1], ["key2": value2]]
+  }
+  
+  func fetchData(value1: String, value2: String) async throws -> Data {
+    let parameter = getParameter(value1: value1, value2: value2)
+    // Request processing
+  }
+}
+```
+
+```Swift
+struct UserActivityRepository: UserRepositoryProtocol {
+  var path: String {
+    return "/user/v2/activity"
+  }
+  
+  func getParameter(value1: Any, value2: Any) -> [[String: Any]] {
+    return [["key3": value1], ["key4": value2]]
+  }
+  
+  func fetchData(value1: String, value2: String) async throws -> Data {
+    let parameter = getParameter(value1: value1, value2: value2)
+    // Request processing
+  }
+}
+```
+
+Next, by conforming to the protocol and separating and redesigning the repositories according to their responsibilities, we were able to redesign using the Strategy pattern. In cases where generic classes like repositories are likely to become redundant, designing with the Strategy pattern is effective. Additionally, if a class does not conform to the protocol, a compile-time error will occur, which helps prevent omissions of required function definitions, making this an effective design pattern from the perspective of code safety. By utilizing the Strategy pattern, you can redesign complex, intertwined implementations into simpler ones.
+
+##  4. First Class Collection
+
+First-Class Collection is a design pattern to approach where a collection (such as a List, Set, or Map) is treated as an object itself, allowing you to isolate logic specific to the collection. This can lead to better separation of concerns, increased reusability, and improved testability.
+
+Now, let's take a look at the following code:
+
+```Swift
+func addItem(_ item: Item) {
+  if items.count == 10 {
+    fatalError("already max count.")
+  }
+  if items.firstIndex(where: { $0.id == item.id }) == nil {
+    return
+  }
+  items.append(item)
+}
+```
+
+This addItem function adds an element to its items, but it includes responsibilities for validating the number of elements, checking for duplicates, and adding the element—all within the same function. Additionally, because elements are added directly to items, there is a risk of side effects. Let's refactor this code using First-Class Collection to separate these responsibilities and change it to an object that avoids side effects.
+
+```Swift
+struct ItemCollection {
+  private let items: [Item]
+  private let maxCount = 10
+  
+  init(items: [Item]) {
+    self.items = items
+  }
+  
+  func add(item: Item) -> ItemCollection {
+    if isMaxCount() {
+      fatalError("already max count.")
+    }
+    if contains(item: item) {
+      return self
+    }
+    var newItems = items
+    newItems.append(item)
+    return ItemCollection(items: newItems)
+  }
+  
+  func contains(item: Item) -> Bool {
+    return items.firstIndex(where: { $0.id == item.id }) != nil
+  }
+  
+  func isMaxCount() -> Bool {
+    return items.count == maxCount
+  }
+}
+```
+
+In this example, we've created an ItemCollection, and by encapsulating the responsibilities for element count validation, duplicate checking, and adding elements into separate functions, we've achieved a better separation of concerns. When adding elements, items is not modified directly, which helps to avoid side effects.
+
+By designing with First-Class Collection, you can handle collections more safely.
