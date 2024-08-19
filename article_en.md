@@ -1,7 +1,7 @@
 # Swift design patterns learning from Good Code and Bad Code
 
 <p style="text-align: right">
-Akihiko Sato / [@akkiee76](https://x.com/akkiee76)</p>
+Akihiko Sato / @akkiee76</p>
 
 ## Introduction
 
