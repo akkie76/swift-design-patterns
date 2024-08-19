@@ -1,7 +1,7 @@
 # Swift design patterns learning from Good Code and Bad Code
 
 <p style="text-align: right">
-Akihiko Sato / @akkiee76</p>
+Akihiko Sato / [@akkiee76](https://x.com/akkiee76)</p>
 
 ## Introduction
 
@@ -308,3 +308,104 @@ struct ItemCollection {
 In this example, we've created an ItemCollection, and by encapsulating the responsibilities for element count validation, duplicate checking, and adding elements into separate functions, we've achieved a better separation of concerns. When adding elements, items is not modified directly, which helps to avoid side effects.
 
 By designing with First-Class Collection, you can handle collections more safely.
+
+## 5. Sprout Class
+
+The Sprout Class is a technique used to extend the functionality of an existing class by extracting the necessary features into a separate class, which is then utilized by the existing class. This allows you to add new functionality without directly modifying the existing class, thereby minimizing its impact.
+
+Let's take a look at the following code, where a subscription feature has been added to an existing Payment class responsible for regular billing.
+
+```Swift
+struct Payment {
+  private let identifier: String
+  
+  init(identifier: String) {
+    self.identifier = identifier
+  }
+  
+  func processPayment() {
+    // Purchase processing
+  }
+  
+  // Added properties related to subscriptions
+  private var subscriptionType: SubscriptionType?
+  private var startedAt: Date?
+  
+  // Added methods related to subscriptions
+  func processSubscription() {
+    if let subscriptionType = subscriptionType, let startedAt = startedAt {
+      if !enableSubscription(subscriptionType: subscriptionType, startedAt: startedAt) {
+        fatalError("not available subscription.")
+      }
+      // Other processing
+    }
+    processPayment()
+  }
+  
+  func enableSubscription(subscriptionType: SubscriptionType, startedAt: Date) -> Bool {
+    // Check the validity of the subscription
+    return enable
+  }
+}
+```
+
+The Payment class now includes subscription processing, increasing its responsibilities. By defining both the regular purchase processing with processPayment() and the subscription purchase processing with processSubscription(), the related logic also increases, making the code more complex. Let's use the Sprout Class to separate this subscription functionality from Payment and reduce its responsibilities.
+
+```Swift
+protocol PaymentProtocol {
+  var identifier: String { get }
+  func processPayment()
+}
+
+extension PaymentProtocol {
+  func processPayment() {
+    // Purchase processing
+  }
+}
+
+struct Payment: PaymentProtocol {
+  var identifier: String
+  
+  init(identifier: String) {
+    self.identifier = identifier
+  }
+}
+```
+
+```Swift
+struct SubscriptionPayment: PaymentProtocol {
+  var identifier: String
+  let subscriptionType: SubscriptionType
+  let startedAt: Date
+  
+  init(identifier: String, subscriptionType: SubscriptionType, startedAt: Date) {
+    self.identifier = identifier
+    self.subscriptionType = subscriptionType
+    self.startedAt = startedAt
+  }
+  
+  func processSubscription() {
+    if !enable() {
+      fatalError("not available subscription.")
+    }
+    // Other processing
+    processPayment()
+  }
+  
+  func enable() -> Bool {
+    // Check if the subscription is valid
+    return enable
+  }
+}
+```
+By defining a protocol for the common processPayment() method shared between Payment and SubscriptionPayment, we moved the logic into the extension. Then, we added the subscription-related logic to SubscriptionPayment, separating the responsibilities and avoiding the impact and bloating of Payment. This also improves the independence and testability of SubscriptionPayment.
+
+In this way, by using a Sprout Class, you can safely add new functionality without directly modifying the existing implementation, while also enhancing the independence and testability of the logic.
+
+## Conclusion
+
+In this article, I introduced fundamental Swift design patterns based on object-oriented principles. I hope this article serves as a valuable resource that contributes to the improvement of developers' skills and the success of your projects. Please note that this article is intended for informational purposes only, and any operations based on it should be carried out at your own discretion and responsibility.
+
+### Thoughts and Feedback
+
+I look forward to hearing your thoughts and feedback on this article via my X account: [@akkiee76](https://x.com/akkiee76). Please feel free to send in your comments, whether it's about what you liked or what was hard to understand, as it will help inform my future writing. Additionally, the sample code discussed in this article is available on the following GitHub repository. If you have any suggestions or questions, I also welcome Pull Requests or Issues.
